@@ -1,137 +1,46 @@
 var express = require("express");
 var app = express();
+var path = require('path');
+
+// DB
 var mongo = require('mongodb').MongoClient;
-var assert = require('assert');
-// var urlChecker = require("./shorten.js");
+var config = require('./model/config.js').url
 
-var theDb = "mongodb://localhost:27017/urls";
 
-var theUrl;
-var theResult;
-var theNum;
+// Controller
+// var urlChecker = require('./controller/index.js')
 
-app.get("/new/:id", function(req, res) { // After "/" in the url becomes a variable
+// View Engine
+var ejs = require('ejs');
+app.set('view engine', ejs);
 
- var siteParam = req.params.id;
- var theNum = Math.floor(Math.random() * 1000);
+app.use(express.static(path.join(__dirname, 'public')));
 
- var theTest = new RegExp(/^[0-9]{1,4}$/);
+app.get('/', function (req, res) {
+  res.render('index.ejs');
+})
 
- function ValidURL(str) {
-  var re = /^(http[s]?:\/\/){0,1}(www\.){0,1}[a-zA-Z0-9\.\-]+\.[a-zA-Z]{2,5}[\.]{0,1}/;
-  if (!re.test(str)) {
-   return false;
+// Use render to use the template engine + fullname of file
+app.get('/:id', function (req, res) {
+  if (!req.params.id) {
+    res.render('index.ejs');
+  } else {
+    // do something
+    res.send("hello")
   }
-  return true
- }
+})
 
- var findURL = function(db, callback) {
-
-  if (ValidURL(siteParam) === true) {
-   console.log("Insert Query is running!");
-   theUrl = siteParam;
-
-   var cursor = db.collection('urls').find({
-    long_url: theUrl,
-   }, {
-    long_url: 1,
-    short_url: 1,
-    _id: 0
-   });
-
-   var shortCursor = db.collection('urls').find({
-    short_url: theNum,
-   }, {
-    long_url: 1,
-    short_url: 1,
-    _id: 0
-   });
-
-   var getRandomNum = shortCursor.count(function(err, count) {
-    if (count > 0) {
-     theNum = Math.floor(Math.random() * 1000);
-     getRandomNum();
-    } else {
-     return theNum;
+app.get('/url/:id', function (req, res) {
+  let data = req.params.id;
+  urlChecker.check(data, function (err, info) {
+    if (err) {
+      console.log(err);
+      res.redirect('/')
     }
-   });
+    res.json(info);
+  })
+})
 
-
-   cursor.count(function(err, count) {
-
-    if (count === 0) {
-     console.log(theUrl + "was not found, inserting document to database");
-     db.collection("urls").insertOne({
-      long_url: theUrl,
-      short_url: theNum
-     }, function(err, results) {
-      db.collection("urls").find({
-       long_url: theUrl
-      }, {
-       long_url: 1,
-       short_url: 1,
-       _id: 0
-      }).toArray(function(err, doc) {
-       if (err) {
-        console.error(err);
-       }
-       theResult = doc;
-       res.send(theResult[0]);
-       callback();
-      });
-
-     });
-
-    } else if (count > 0) {
-      console.log("Count is over one!!")
-     cursor.toArray(function(err, doc) {
-      if (err) {
-       console.error(err);
-      }
-      theResult = doc;
-      res.send(theResult);
-      callback();
-     });
-    }
-   });
- } else if (ValidURL(siteParam) === false && theTest.test(siteParam) === true) {
-   console.log("NUMBERS ARE RUNNING");
-   siteParam = parseInt(siteParam);
-   console.log(siteParam, "this is siteParam");
-
-   var cursor1 = db.collection('urls').find({
-    short_url: siteParam
-   }, {
-    long_url: 1,
-    _id: 0
-   });
-
-   cursor1.toArray(function(err, doc) {
-    theResult = doc[0]["long_url"];
-    res.redirect("http://" + theResult);
-    callback();
-   });
-
- } else {
-   res.send({
-     "Url" : "Null - please enter in a new URL"
-   });
-   callback();
- }
- }
-
- mongo.connect(theDb, function(err, db) {
-  if (err) {
-    console.error(err);
-  }
-  findURL(db, function(data) {
-      db.close();
-  });
- });
-
-
-});
-
-app.listen("3000", function() {
+app.listen(3000, function() {
  console.log("connected on port 3000");
 });

@@ -1,0 +1,40 @@
+body {
+  height: 100%;
+  width: 100%;
+  text-align: center;
+  margin-top: 60px;
+}
+
+h1 {
+  font-size: 2.5em;
+}
+
+.footer-wrapper {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+}
+
+.footer-wrapper div {
+  padding: 0px;
+  margin-bottom: -10px;
+}
+ul {
+  text-align: left;
+}
+
+h6 {
+  margin-top: 5px;
+  text-align: center;
+  text-decoration: underline;
+}
+.example-section {
+  text-align: left;
+}
+
+
+.wrapper {
+  width: 50%;
+  margin-left: auto;
+  margin-right: auto;
+}

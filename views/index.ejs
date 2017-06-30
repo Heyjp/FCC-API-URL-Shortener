@@ -1,0 +1,39 @@
+<!-- views/pages/index.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ../views/partials/head %>
+</head>
+<body>
+
+    <main>
+      <div class="wrapper">
+        <h1>FreeCodeCamp API Project</h1>
+        <h1>URL Shortener Microservice</h1>
+        <h5>User Stories</h5>
+        <ul>
+          <li>I can pass a URL as a parameter and I will receive a shortened URL in the JSON response</li>
+          <li>When I visit that shortened URL, it will redirect me to my original Link</li>
+        </ul>
+        <div class="example-section">
+          <h6>Example Input</h6>
+          <code>localhost:3000/new/https://www.google.com</code>
+          <br>
+          <code>localhost:3000/new/http://foo.com:80</code>
+          <h6>Output</h6>
+          <code>{"original_url": http://foo.com:80, "short_url": "https://little-url.herokuapp.com/8170"}</code>
+          <h6>Usage</h6>
+          <code>localhost:3000/8170</code>
+          <h6>Will redirect to</h6>
+          <code>https://www.google.com</code>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+        <% include ../views/partials/footer %>
+    </footer>
+
+</body>
+</html>
