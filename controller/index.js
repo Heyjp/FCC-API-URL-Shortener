@@ -1,15 +1,10 @@
-module.exports = {};
+var shortid = require('shortid');
+var db = require('../model/db.js');
 
+// Make sure the shortened URL is correct
+let shortUrlTest = new RegExp(/^[0-9]{1,4}$/);
 
-var theUrl;
-var theResult;
-var theNum;
-
-var siteParam = req.params.id;
-var theNum = Math.floor(Math.random() * 1000);
-
-var theTest = new RegExp(/^[0-9]{1,4}$/);
-
+// Check to see if legitimate URL is passed
 function ValidURL(str) {
  var re = /^(http[s]?:\/\/){0,1}(www\.){0,1}[a-zA-Z0-9\.\-]+\.[a-zA-Z]{2,5}[\.]{0,1}/;
  if (!re.test(str)) {
@@ -18,97 +13,116 @@ function ValidURL(str) {
  return true
 }
 
-var findURL = function(db, callback) {
+function getURL (data, callback) {
 
- if (ValidURL(siteParam) === true) {
-  console.log("Insert Query is running!");
-  theUrl = siteParam;
+  // point to access db from
+  var collection = db.get().collection('urls');
 
-  var cursor = db.collection('urls').find({
-   long_url: theUrl,
-  }, {
-   long_url: 1,
-   short_url: 1,
-   _id: 0
-  });
-
-  var shortCursor = db.collection('urls').find({
-   short_url: theNum,
-  }, {
-   long_url: 1,
-   short_url: 1,
-   _id: 0
-  });
-
-  var getRandomNum = shortCursor.count(function(err, count) {
-   if (count > 0) {
-    theNum = Math.floor(Math.random() * 1000);
-    getRandomNum();
-   } else {
-    return theNum;
-   }
-  });
-
-
-  cursor.count(function(err, count) {
-
-   if (count === 0) {
-    console.log(theUrl + "was not found, inserting document to database");
-    db.collection("urls").insertOne({
-     long_url: theUrl,
-     short_url: theNum
-    }, function(err, results) {
-     db.collection("urls").find({
-      long_url: theUrl
+  // Search for Url, if it does not exist create a new instance
+    collection.find({
+      long_url: data.id,
      }, {
       long_url: 1,
       short_url: 1,
       _id: 0
-     }).toArray(function(err, doc) {
-      if (err) {
-       console.error(err);
-      }
-      theResult = doc;
-      res.send(theResult[0]);
-      callback();
-     });
-
+    }).toArray(function (err, count) {
+      console.log(count, "this is count");
+      // if no docs then insert new doc to db
+        if (count.length === 0) {
+          console.log("count is 0");
+          // generate new short_url id
+          let urlId = shortid.generate();
+          /*
+          // insert new doc to db and callback results (may need additonal query) to return data
+          db.insertOne({
+           long_url: theUrl,
+           short_url: urlId
+          }, function(err, results) {
+              if (err) {
+                return err;
+              }
+              // return newly inserted doc data
+              callback(null, results);
+            }
+          )
+          */
+        } else {
+          // long_url already exists return existing doc
+            console.log("Count is over one!!")
+            /*
+              db.find({
+                long_url: data.url,
+               }, {
+                long_url: 1,
+                short_url: 1,
+                _id: 0
+              }).toArray(function(err, doc) {
+                if (err) {
+                 console.error(err);
+                }
+                callback();
+             });
+            */
+        }
     });
+}
 
-   } else if (count > 0) {
-     console.log("Count is over one!!")
-    cursor.toArray(function(err, doc) {
-     if (err) {
-      console.error(err);
-     }
-     theResult = doc;
-     res.send(theResult);
-     callback();
-    });
-   }
-  });
-} else if (ValidURL(siteParam) === false && theTest.test(siteParam) === true) {
-  console.log("NUMBERS ARE RUNNING");
-  siteParam = parseInt(siteParam);
-  console.log(siteParam, "this is siteParam");
+exports.getId = function (data, callback) {
+  console.log(getId, "getId is running")
+  // point to access db from
+  var collection = db.get().collection('urls');
 
-  var cursor1 = db.collection('urls').find({
-   short_url: siteParam
+  // search for short_url id and redirect to long_url
+  collection.find({
+   short_url: data.id,
   }, {
    long_url: 1,
+   short_url: 1,
    _id: 0
-  });
+ }).count(function (err, count) {
+   // exit if err
+   if (err) {
+     console.error(err);
+     return false;
+   }
+   // shortid does not exist so return false id
+   if (count === 0) {
+     console.log(count, "count = 0;");
+     return false;
+   }
 
-  cursor1.toArray(function(err, doc) {
-   theResult = doc[0]["long_url"];
-   res.redirect("http://" + theResult);
-   callback();
-  });
+   // shortid does exist, return long_url for redirect
+   console.log(count, "count > 0");
+   /*
+     var cursor1 = db.collection('urls').find({
+      short_url: siteParam
+     }, {
+      long_url: 1,
+      _id: 0
+     });
 
-} else {
-  res.send({
-    "Url" : "Null - please enter in a new URL"
-  });
-  callback();
+     cursor1.toArray(function(err, doc) {
+      theResult = doc[0]["long_url"];
+      res.redirect("http://" + theResult);
+      callback();
+     });
+   */
+ })
 }
+
+exports.handleUrl = function (data, callback) {
+
+  // if url is valid run getURL or return error
+    if (ValidURL(data)) {
+      getURL(data, function (err, data) {
+        if (err) {
+          console.log(err);
+        }
+        // return url data to route
+        return callback(data);
+      })
+    } else {
+      // return an error and no data to route
+      callback(true, null);
+    }
 }

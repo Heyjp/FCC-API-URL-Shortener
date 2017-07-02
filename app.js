@@ -1,14 +1,14 @@
+require('dotenv').config()
 var express = require("express");
 var app = express();
 var path = require('path');
 
 // DB
-var mongo = require('mongodb').MongoClient;
+var db = require('./model/db.js');
 var config = require('./model/config.js').url
 
-
-// Controller
-// var urlChecker = require('./controller/index.js')
+// Controller - give controller access to the DB
+var controller = require('./controller/index.js');
 
 // View Engine
 var ejs = require('ejs');
@@ -18,29 +18,50 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', function (req, res) {
   res.render('index.ejs');
-})
+});
 
-// Use render to use the template engine + fullname of file
-app.get('/:id', function (req, res) {
-  if (!req.params.id) {
-    res.render('index.ejs');
+// connect to db, if successful start server
+db.connect(process.env.DB_URL, function (err) {
+  if (err) {
+    console.log("unable to connect");
+    return;
   } else {
-    // do something
-    res.send("hello")
+      app.listen(3000, function() {
+        console.log("connected on port 3000");
+      });
   }
 })
 
 app.get('/url/:id', function (req, res) {
-  let data = req.params.id;
-  urlChecker.check(data, function (err, info) {
+  // take the user url
+  let url = req.params.id;
+  // run url check from controller
+  controller.handleUrl(url, function (err, info) {
     if (err) {
-      console.log(err);
-      res.redirect('/')
+      console.log(err, "this is error");
+      return res.redirect('/')
     }
-    res.json(info);
+    // successful returning json object
+    return res.json(info);
   })
 })
 
-app.listen(3000, function() {
- console.log("connected on port 3000");
-});
+// Use render to use the template engine + fullname of file
+app.get('/:id', function (req, res) {
+  console.log("getting id")
+  /*
+  if (!req.params.id) {
+    res.render('index.ejs');
+  } else {
+    // check whether id exists in db - then redirect
+    controller.getId(req.params.id, function (err, data) {
+      if (err) {
+        console.log(err);
+      }
+
+      // do something...
+      res.send("hello")
+    })
+  }
+  */
+})
