@@ -26,7 +26,7 @@ db.connect(process.env.DB_URL, function (err) {
     console.log("unable to connect");
     return;
   } else {
-      app.listen(3000, function() {
+      app.listen(process.env.PORT || 3000, function() {
         console.log("connected on port 3000");
       });
   }
