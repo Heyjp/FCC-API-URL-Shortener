@@ -36,11 +36,8 @@ app.get('/url/:id', function (req, res) {
   // take the user url
   let url = req.params.id;
   // run url check from controller
-  controller.handleUrl(url, function (err, info) {
-    if (err) {
-      console.log(err, "this is error");
-      return res.redirect('/')
-    }
+  controller.handleUrl(url, function (info) {
+
     // successful returning json object
     return res.json(info);
   })
@@ -49,7 +46,7 @@ app.get('/url/:id', function (req, res) {
 // Use render to use the template engine + fullname of file
 app.get('/:id', function (req, res) {
   console.log("getting id")
-  /*
+
   if (!req.params.id) {
     res.render('index.ejs');
   } else {
@@ -58,10 +55,9 @@ app.get('/:id', function (req, res) {
       if (err) {
         console.log(err);
       }
-
+      console.log(err, data, "this is err and data")
       // do something...
       res.send("hello")
     })
   }
-  */
 })

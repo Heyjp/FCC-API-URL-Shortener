@@ -13,45 +13,49 @@ function ValidURL(str) {
  return true
 }
 
-function getURL (data, callback) {
-
+function getURL (id, callback) {
+  console.log(id, "this is data from getUrl")
   // point to access db from
   var collection = db.get().collection('urls');
 
   // Search for Url, if it does not exist create a new instance
     collection.find({
-      long_url: data.id,
+      long_url: id,
      }, {
       long_url: 1,
       short_url: 1,
       _id: 0
-    }).toArray(function (err, count) {
-      console.log(count, "this is count");
+    }).toArray(function (err, doc) {
+      console.log(doc, "this is doc");
       // if no docs then insert new doc to db
-        if (count.length === 0) {
+        if (doc.length === 0) {
           console.log("count is 0");
           // generate new short_url id
           let urlId = shortid.generate();
-          /*
+
           // insert new doc to db and callback results (may need additonal query) to return data
-          db.insertOne({
-           long_url: theUrl,
+          collection.insertOne({
+           long_url: id,
            short_url: urlId
-          }, function(err, results) {
+         }, function(err, doc) {
               if (err) {
-                return err;
+                return callback(true, err);
+              }
+
+              let newObj = {
+                long_url: doc.ops[0].long_url,
+                short_url: doc.ops[0].short_url
               }
               // return newly inserted doc data
-              callback(null, results);
+              callback(null, newObj);
             }
           )
-          */
         } else {
           // long_url already exists return existing doc
             console.log("Count is over one!!")
-            /*
-              db.find({
-                long_url: data.url,
+
+              collection.find({
+                long_url: id
                }, {
                 long_url: 1,
                 short_url: 1,
@@ -60,53 +64,51 @@ function getURL (data, callback) {
                 if (err) {
                  console.error(err);
                 }
-                callback();
+                console.log(doc, "this is doc");
+                callback(null, doc[0]);
              });
-            */
         }
     });
 }
 
-exports.getId = function (data, callback) {
-  console.log(getId, "getId is running")
+exports.getId = function (id, callback) {
+  console.log(id, "getId is running")
   // point to access db from
   var collection = db.get().collection('urls');
 
   // search for short_url id and redirect to long_url
   collection.find({
-   short_url: data.id,
+   short_url: id,
   }, {
    long_url: 1,
    short_url: 1,
    _id: 0
- }).count(function (err, count) {
+ }).toArray(function (err, info) {
    // exit if err
    if (err) {
      console.error(err);
      return false;
    }
    // shortid does not exist so return false id
-   if (count === 0) {
-     console.log(count, "count = 0;");
-     return false;
+   if (info.length === 0) {
+     return callback(true, "there is url with that id");
+   } else {
+      // shortid does exist, return long_url for redirect
+      console.log(info, info.length, "count > 0");
+
+        collection.find({
+         short_url: id
+        }, {
+         long_url: 1,
+         _id: 0
+        }).toArray(function(err, doc) {
+          if (err) {
+            console.log(err, "this is err");
+          }
+
+           callback(doc[0]);
+        });
    }
-
-   // shortid does exist, return long_url for redirect
-   console.log(count, "count > 0");
-   /*
-     var cursor1 = db.collection('urls').find({
-      short_url: siteParam
-     }, {
-      long_url: 1,
-      _id: 0
-     });
-
-     cursor1.toArray(function(err, doc) {
-      theResult = doc[0]["long_url"];
-      res.redirect("http://" + theResult);
-      callback();
-     });
-   */
  })
 }
 
