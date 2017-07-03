@@ -36,7 +36,11 @@ app.get('/url/:id', function (req, res) {
   // take the user url
   let url = req.params.id;
   // run url check from controller
-  controller.handleUrl(url, function (info) {
+  controller.handleUrl(url, function (err, info) {
+    if (err) {
+      console.error(err, info);
+      return res.redirect('/')
+    }
     // successful returning json object
     return res.json(info);
   })
@@ -50,13 +54,14 @@ app.get('/:id', function (req, res) {
     // check whether id exists in db - then redirect
     controller.getId(req.params.id, function (err, data) {
       if (err) {
+        console.error(err, data);
         // If url id does not exist, return to home page
         return res.redirect('/');
       } else {
         // save the ip to var and redirect
         let newUrl = data.long_url;
         // add http to ensure redirect
-        res.redirect("http://" + newUrl);
+        return res.redirect("http://" + newUrl);
       }
     })
   }

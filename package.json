@@ -14,6 +14,7 @@
     "express": "^4.13.4",
     "mongod": "^1.3.0",
     "mongodb": "^2.1.18",
-    "shortid": "^2.2.8"
+    "shortid": "^2.2.8",
+    "url-regex": "^4.1.1"
   }
 }

@@ -1,20 +1,32 @@
 var shortid = require('shortid');
 var db = require('../model/db.js');
 
-// Make sure the shortened URL is correct
-let shortUrlTest = new RegExp(/^[0-9]{1,4}$/);
+var urlRegex = require('url-regex');
 
 // Check to see if legitimate URL is passed
-function ValidURL(str) {
- var re = /^(http[s]?:\/\/){0,1}(www\.){0,1}[a-zA-Z0-9\.\-]+\.[a-zA-Z]{2,5}[\.]{0,1}/;
- if (!re.test(str)) {
-  return false;
- }
- return true
+// https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url
+function validURL(str) {
+  return urlRegex({exact: true}).test(str);
+};
+
+exports.handleUrl = function (data, callback) {
+
+  // if url is valid run getURL or return error
+    if (validURL(data)) {
+      getURL(data, function (err, results) {
+        if (err) {
+          return callback(true, err);
+        }
+        // return url data to route
+        return callback(null, results);
+      })
+    } else {
+      // return an error and no data to route
+      callback(true, "route not valid");
+    }
 }
 
 function getURL (id, callback) {
-  console.log(id, "this is data from getUrl")
   // point to access db from
   var collection = db.get().collection('urls');
 
@@ -26,27 +38,24 @@ function getURL (id, callback) {
       short_url: 1,
       _id: 0
     }).toArray(function (err, doc) {
-      console.log(doc, "this is doc");
       // if no docs then insert new doc to db
         if (doc.length === 0) {
-          console.log("count is 0");
-          // generate new short_url id
-          let urlId = shortid.generate();
+          // generate a unique short_url id
+          var urlId = shortid.generate();
 
           // insert new doc to db and callback results (may need additonal query) to return data
           collection.insertOne({
            long_url: id,
            short_url: urlId
-         }, function(err, doc) {
+         }, function(err, res) {
               if (err) {
                 return callback(true, err);
               }
 
-              let newObj = {
-                long_url: doc.ops[0].long_url,
-                short_url: doc.ops[0].short_url
+              var newObj = {
+                long_url: res.ops[0].long_url,
+                short_url: res.ops[0].short_url
               }
-              // return newly inserted doc data
               callback(null, newObj);
             }
           )
@@ -100,25 +109,16 @@ exports.getId = function (id, callback) {
           if (err) {
             callback(err, "this is error")
           }
+          // return first item in array
            callback(null, doc[0]);
         });
    }
  })
 }
 
-exports.handleUrl = function (data, callback) {
 
-  // if url is valid run getURL or return error
-    if (ValidURL(data)) {
-      getURL(data, function (err, data) {
-        if (err) {
-          console.log(err);
-        }
-        // return url data to route
-        return callback(data);
-      })
-    } else {
-      // return an error and no data to route
-      callback(true, null);
-    }
+function insertDoc (id, urlId) {
+  var collection = db.get().collection('urls');
+
+
 }
