@@ -52,7 +52,6 @@ function getURL (id, callback) {
           )
         } else {
           // long_url already exists return existing doc
-            console.log("Count is over one!!")
 
               collection.find({
                 long_url: id
@@ -64,7 +63,6 @@ function getURL (id, callback) {
                 if (err) {
                  console.error(err);
                 }
-                console.log(doc, "this is doc");
                 callback(null, doc[0]);
              });
         }
@@ -72,7 +70,6 @@ function getURL (id, callback) {
 }
 
 exports.getId = function (id, callback) {
-  console.log(id, "getId is running")
   // point to access db from
   var collection = db.get().collection('urls');
 
@@ -91,11 +88,9 @@ exports.getId = function (id, callback) {
    }
    // shortid does not exist so return false id
    if (info.length === 0) {
-     return callback(true, "there is url with that id");
+     return callback("This Id does not exist", false);
    } else {
       // shortid does exist, return long_url for redirect
-      console.log(info, info.length, "count > 0");
-
         collection.find({
          short_url: id
         }, {
@@ -103,10 +98,9 @@ exports.getId = function (id, callback) {
          _id: 0
         }).toArray(function(err, doc) {
           if (err) {
-            console.log(err, "this is err");
+            callback(err, "this is error")
           }
-
-           callback(doc[0]);
+           callback(null, doc[0]);
         });
    }
  })

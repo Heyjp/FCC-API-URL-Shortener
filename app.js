@@ -37,7 +37,6 @@ app.get('/url/:id', function (req, res) {
   let url = req.params.id;
   // run url check from controller
   controller.handleUrl(url, function (info) {
-
     // successful returning json object
     return res.json(info);
   })
@@ -45,19 +44,20 @@ app.get('/url/:id', function (req, res) {
 
 // Use render to use the template engine + fullname of file
 app.get('/:id', function (req, res) {
-  console.log("getting id")
-
-  if (!req.params.id) {
-    res.render('index.ejs');
+  if (req.params.id === "favicon.ico") {
+    return res.render('index.ejs');
   } else {
     // check whether id exists in db - then redirect
     controller.getId(req.params.id, function (err, data) {
       if (err) {
-        console.log(err);
+        // If url id does not exist, return to home page
+        return res.redirect('/');
+      } else {
+        // save the ip to var and redirect
+        let newUrl = data.long_url;
+        // add http to ensure redirect
+        res.redirect("http://" + newUrl);
       }
-      console.log(err, data, "this is err and data")
-      // do something...
-      res.send("hello")
     })
   }
 })
